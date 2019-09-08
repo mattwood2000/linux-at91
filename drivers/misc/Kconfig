@@ -83,6 +83,16 @@ config ATMEL_TCB_CLKSRC_BLOCK
 	  TC can be used for other purposes, such as PWM generation and
 	  interval timing.
 
+config AIC5_FIQ
+	bool "Atmel SAMA5D2 fiq driver"
+	depends on ARCH_AT91 && SOC_SAMA5
+	default n
+		select FIQ
+	help
+	  SAMA5 fiq driver demo.
+		this driver has been verified on the SAMA5D27-SOM1-EK1,
+		should work on other SAMA5 SOC with adjusted device tree.
+
 config DUMMY_IRQ
 	tristate "Dummy IRQ handler"
 	default n

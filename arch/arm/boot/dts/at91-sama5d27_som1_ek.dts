@@ -194,7 +194,7 @@
 				atmel,use-dma-tx;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_mikrobus1_uart>;
-				status = "okay";
+				status = "disabled"; /* conflict with fiq */
 			};
 
 			flx3: flexcom@fc014000 {
@@ -510,6 +510,11 @@
 						 <PIN_PD0__FLEXCOM4_IO4>;
 					bias-disable;
 				};
+
+				pinctrl_fiq_default: fiq_default {
+					pinmux = <PIN_PB4__FIQ>;
+					bias-pull-up;
+				};
 			};
 
 			can1: can@fc050000 {
@@ -589,6 +594,16 @@
 		regulator-always-on;
 		regulator-boot-on;
 		vin-supply = <&vddana>;
+		status = "okay";
+	};
+
+	aic5_fiq {
+		compatible = "atmel,sama5d2-fiq";
+		reg = <0xfc020000 0x200>;
+		interrupts = <0 IRQ_TYPE_EDGE_FALLING 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_fiq_default>;
+		out-gpio = <&pioA PIN_PB3 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 };

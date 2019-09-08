@@ -507,7 +507,7 @@ NOKPROBE_SYMBOL(do_undefinstr)
  * This handler is not appropriate for general purpose use in drivers
  * platform code and can be overrideen using set_fiq_handler.
  */
-asmlinkage void __exception_irq_entry handle_fiq_as_nmi(struct pt_regs *regs)
+asmlinkage void __attribute__((weak)) __exception_irq_entry handle_fiq_as_nmi(struct pt_regs *regs)
 {
 	struct pt_regs *old_regs = set_irq_regs(regs);
 
