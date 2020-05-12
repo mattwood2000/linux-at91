@@ -5,6 +5,12 @@
 
 menu "Analog to digital converters"
 
+config PAC193X
+	tristate "PAC193x series driver"
+        depends on I2C
+        help
+          Microchip PAC193x Energy Measurement device support
+
 config AD_SIGMA_DELTA
 	tristate
 	select IIO_BUFFER
