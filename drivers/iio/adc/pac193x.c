@@ -42,6 +42,8 @@
 #include <linux/iio/sysfs.h>
 #include <linux/iio/buffer.h>
 #include <linux/iio/kfifo_buf.h>
+#include <linux/version.h>
+
 #define PAC193X_MAX_RFSH_LIMIT						60000
 /*(17 * 60 * 1000) //around 17 minutes@1024 sps */
 #define PAC193X_MIN_POLLING_TIME					50
@@ -953,7 +955,9 @@ static int pac193x_write_raw(struct iio_dev *indio_dev,
 
 static const struct iio_info pac193x_info = {
 	.attrs = &pac193x_group,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
 	.driver_module = THIS_MODULE,
+#endif
 	.read_raw = pac193x_read_raw,
 	.write_raw = pac193x_write_raw,
 };
@@ -1157,11 +1161,18 @@ static void pac193x_work_periodic_rfsh(struct work_struct *work)
 			PAC193x_MIN_UPDATE_WAIT_TIME);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
 void pac193x_read_reg_timeout(unsigned long arg)
 {
-	int ret;
 	struct pac193x_chip_info *chip_info = (struct pac193x_chip_info *)arg;
+#else
+void pac193x_read_reg_timeout(struct timer_list *t)
+{
+	struct pac193x_chip_info *chip_info = from_timer(chip_info, t, tmr_forced_update);
+#endif
+
 	struct i2c_client *client = chip_info->client;
+	int ret;
 
 	ret = mod_timer(&chip_info->tmr_forced_update,
 		jiffies + msecs_to_jiffies(PAC193X_MAX_RFSH_LIMIT));
@@ -1207,10 +1218,14 @@ static int pac193x_setup_periodic_refresh(struct pac193x_chip_info *chip_info)
 	INIT_WORK(&chip_info->work_chip_rfsh, pac193x_work_periodic_rfsh);
 
 	/* setup the latest moment for reading the regs before saturation */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
 	init_timer(&chip_info->tmr_forced_update);
 	/* register the timer */
 	chip_info->tmr_forced_update.data = (unsigned long)chip_info;
 	chip_info->tmr_forced_update.function = pac193x_read_reg_timeout;
+#else
+	timer_setup(&chip_info->tmr_forced_update, pac193x_read_reg_timeout, 0);
+#endif
 	chip_info->tmr_forced_update.expires = jiffies +
 			msecs_to_jiffies(PAC193X_MAX_RFSH_LIMIT);
 	chip_info->forced_reads_triggered = 0;
